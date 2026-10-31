@@ -2,7 +2,7 @@
 
 Read the principles first; this file says how they look in Go and adds what is specific to Go. Go has strong, shared idioms, so write the code an experienced Go reviewer expects. Where a principle and an official Go rule disagree, the Go rule wins.
 
-A tag in parentheses names the source a rule restates: **CRC** is [Code Review Comments](https://go.dev/wiki/CodeReviewComments), **EG** is [Effective Go](https://go.dev/doc/effective_go), **TC** is [Test Comments](https://go.dev/wiki/TestComments), **DC** is [Go Doc Comments](https://go.dev/doc/comment), **Uber** is [Uber's guide](https://github.com/uber-go/guide/blob/master/style.md). An untagged rule is a house rule. "Departs from" marks a deliberate house rule against a named source.
+A tag in parentheses names the source a rule restates: **CRC** is [Code Review Comments](https://go.dev/wiki/CodeReviewComments), **EG** is [Effective Go](https://go.dev/doc/effective_go), **TC** is [Test Comments](https://go.dev/wiki/TestComments), **DC** is [Go Doc Comments](https://go.dev/doc/comment), **Uber** is [Uber's guide](https://github.com/uber-go/guide/blob/master/style.md), **Cheney** is [Practical Go](https://dave.cheney.net/practical-go/presentations/gophercon-singapore-2019.html). An untagged rule is a house rule. "Departs from" marks a deliberate house rule against a named source.
 
 ## Sources and versions
 
@@ -12,9 +12,9 @@ Rank sources in this order:
 2. The repository's conventions.
 3. Current official guidance: package docs, Doc Comments, Test Comments, Code Review Comments, and the Go Blog.
 4. Effective Go. It is "not actively updated" and predates modules, generics, and `errors.Is`; its core-language advice stands, but newer official sources win where they disagree.
-5. The [Google Go Style Guide](https://google.github.io/styleguide/go/), which Code Review Comments names as its longer discussion, for rationale when an official rule needs explaining. Uber supplies the individual rules tagged Uber below and nothing else; its `_` prefix on unexported globals, 99-column limit, and `go.uber.org/atomic` (superseded by typed `sync/atomic` in Go 1.19) are not adopted.
+5. The [Google Go Style Guide](https://google.github.io/styleguide/go/), which Code Review Comments names as its longer discussion, for rationale when an official rule needs explaining. Uber and Cheney supply the individual rules tagged below and nothing else; Uber's `_` prefix on unexported globals, 99-column limit, and `go.uber.org/atomic` (superseded by typed `sync/atomic` in Go 1.19) are not adopted, and Cheney's pre-1.13 error advice (behavior assertions by hand, no exported error types) is superseded by `errors.Is` and `errors.As`.
 
-When a rule here and a repository's practice differ and no source settles it, look at how [tailscale](https://github.com/tailscale/tailscale) and [litestream](https://github.com/benbjohnson/litestream) do it; both are idiomatic, current, and tested with the standard library.
+When a rule here and a repository's practice differ and no source settles it, look at how [tailscale](https://github.com/tailscale/tailscale) and [litestream](https://github.com/benbjohnson/litestream) do it; both are idiomatic and current.
 
 The `go` directive in the main module's `go.mod` sets the language version and the [GODEBUG defaults](https://go.dev/doc/godebug), so it decides whether a version-dependent rule applies. Read it first, and do not apply a rule a newer release made unnecessary.
 
@@ -23,11 +23,11 @@ The `go` directive in the main module's `go.mod` sets the language version and t
 `gofmt`, `go vet`, `go fix`, gopls, and any linter the repository configures are authoritative for what they check (`go tool vet help`, `go tool fix help`). This guide does not restate their checks and MUST NOT contradict them. Do not revert their fixes or report findings they would resolve.
 
 - Format with `gofmt` or `goimports`; rearrange code rather than working around the formatter. (CRC, EG)
-- Run `go vet ./...` even when `go test` passes: `go test` runs ten of vet's checks.
+- Run `go vet ./...` even when `go test` passes: `go test` runs only part of vet.
 - Before reporting done, run `go fix -diff` on changed packages and apply the hunks on lines you wrote. After a toolchain upgrade, run `go fix ./...` from a clean tree until it changes nothing, as its own commit. (Go 1.26 `go fix`)
 - With gopls MCP tools, follow `gopls mcp -instructions`: `go_diagnostics` after each edit, a vulnerability check at the start and after dependency changes. Without them: `go build ./...` and `go vet ./...` after edits, `go test` on changed packages while iterating, `govulncheck ./...` after dependency changes if installed.
 - Run `go test ./...` (with `-race` when concurrency is involved) once before reporting done, or as the repository's checks direct.
-- gopls's "Add methods to T to implement an interface" action (v0.23+) generates `panic("unimplemented")` bodies; replace every one.
+- gopls's "Add methods to T to implement an interface" action generates `panic("unimplemented")` bodies; replace every one.
 
 ## Formatting and imports
 
@@ -41,9 +41,9 @@ The `go` directive in the main module's `go.mod` sets the language version and t
 - Package names are short, lowercase, single words that say what the package provides. (EG) Avoid `util`, `common`, `misc`, `api`, `types`, `interfaces`, and `helpers`, and do not repeat the package name in exported names (`http.Server`, not `http.HTTPServer`). (CRC, [Package names](https://go.dev/blog/package-names))
 - `MixedCaps` everywhere, including constants: `maxLength`, not `MAX_LENGTH`. (CRC) Test functions may use one underscore to group cases: `TestParse_Empty`. (Uber)
 - Initialisms keep one case: `userID`, `HTTPClient`, `urlPony`, `xmlHTTPRequest`. Protobuf-generated code is exempt. (CRC)
-- Name length follows scope: short in a few lines, descriptive for values that live longer. (CRC)
+- Name length follows the distance between declaration and use: single letters for loop and branch variables, single words for parameters and results, multiple words for functions and package-level names. Do not mix long and short names in one parameter list. (CRC, Cheney)
 - Receivers are short, usually one or two letters, the same on every method, never `this` or `self`. (CRC)
-- Do not shadow predeclared identifiers such as `len`, `new`, `error`, or `any`. (Uber)
+- Do not shadow predeclared identifiers such as `len`, `new`, `error`, or `any`. (Uber) Do not let a package name take the obvious variable name; `ctx`, not `context`. (Cheney)
 - No `Get` on a plain accessor (`Owner()`); setters are `SetOwner`. (EG)
 - Constructors are `New` when the package exports only that type, otherwise `NewThing`. (EG)
 - Methods with a standard meaning (`Read`, `Write`, `Close`, `Flush`, `String`) keep the standard signature; call it `String`, never `ToString`. (EG)
@@ -52,6 +52,7 @@ The `go` directive in the main module's `go.mod` sets the language version and t
 ## Types, values, and construction
 
 - Make the zero value useful when that is natural. (EG) When it cannot be, use unexported fields and a constructor that returns a valid value or an error.
+- `var x T` declares a deliberately zero value; `x := expr` declares a deliberately initialized one. Keep the two forms to those meanings so that an unusual initialization stands out. (Uber, Cheney)
 - A constructor that acquires a resource returns something with a `Close` and says so in its doc comment.
 - Accept interfaces, return concrete types. Define an interface in the package that uses it, with only the methods it calls, and only once a real consumer needs it; never on the implementing side "for mocking". (CRC) When a type exists only to implement an interface, its constructor returns the interface, as `crc32.NewIEEE` returns `hash.Hash32`. (EG)
 - Add `var _ I = (*T)(nil)` only for an interface the type must satisfy by contract and nothing in the code already converts. (EG, Uber)
@@ -64,12 +65,15 @@ The `go` directive in the main module's `go.mod` sets the language version and t
 - Do not design an API that treats a nil slice and an empty slice differently; return nil by default and test emptiness with `len(s) == 0`. JSON is the known exception: nil encodes as `null`, `[]T{}` as `[]`. (CRC, Uber)
 - Start an enum at one unless zero is the meaningful default. (Uber)
 - Use `crypto/rand` (`rand.Text` since Go 1.24) for keys, tokens, and anything secret; never `math/rand`. (CRC)
-- Package-level values are fine when they are effectively constant: lookup tables, `regexp.MustCompile` patterns, sentinel errors. Avoid mutable package state, including function variables that tests reassign (`var timeNow = time.Now`); pass the function as a field or parameter. (Uber) Prefer a library's instance API to its package-level configuration.
+- Package-level values are fine when they are effectively constant: lookup tables, `regexp.MustCompile` patterns, sentinel errors. Avoid mutable package state, which is an invisible parameter to every function that can see it (Cheney), including function variables that tests reassign (`var timeNow = time.Now`); pass the function as a field or parameter. (Uber) Prefer a library's instance API to its package-level configuration.
 - Avoid `init`. When registration or deterministic precomputation requires one, it MUST be deterministic and MUST NOT perform I/O, read environment or process state, start goroutines, or depend on another `init`. (Uber's "should", made MUST; departs from EG, whose `init` depends on environment variables and calls `log.Fatal`)
 
 ## Functions and methods
 
-- Keep decisions in functions that take values and return values; keep I/O at the edges (principle 1). Accept the narrowest input: an `io.Reader` rather than a filename, rows rather than a client.
+- Accept the narrowest interface the function calls: `io.Writer`, not `io.WriteCloser` or `*os.File` (principle 1). A function that receives an open resource does not close it; whoever opened it does. (Cheney)
+- Do not let `nil` stand for a default, as `http.ListenAndServe(addr, nil)` means `DefaultServeMux`: it gives two spellings of one call, spreads to every function built on it, and invites `nil` where it is not accepted. Take the value, or add a function for the default case. (Cheney)
+- Adjacent parameters of one type whose order matters (`CopyFile(to, from string)`) can be swapped without the compiler or a reviewer noticing. Give them distinct types, make the call a method on one of them, or take a struct with named fields. Symmetric parameters are fine. (Cheney)
+- Do not add a parameter to an exported function that only tests set; keep the public form and set the test property through an unexported field or a test helper. (Cheney)
 - Pointer receivers when a method mutates, the value is large, it contains a `sync` value, or identity matters; when in doubt, use a pointer. No pointer receiver on a map, func, chan, or a slice the method does not reslice. (CRC) Do not mix pointer and value receivers on one type. (CRC, FAQ) The one exception is pointer-receiver decode methods on a value type, as `time.Time` does. (Departs from CRC.)
 - A method uses its receiver, satisfies an interface, or is a deliberate extension point; otherwise write a function.
 - Functional options suit constructors with several optional settings that will grow; required dependencies and small fixed sets are plain parameters. (Uber)
@@ -77,7 +81,7 @@ The `go` directive in the main module's `go.mod` sets the language version and t
 
 ## Control flow
 
-- Handle errors and edge cases first and return early; no `else` after a branch that returns. (CRC, EG) When an `if` with an init statement would need an `else`, declare the variable on its own line instead. (CRC)
+- Handle errors and edge cases first and return early, so the success path runs down the left margin; no `else` after a branch that returns. (CRC, EG, Cheney) When an `if` with an init statement would need an `else`, declare the variable on its own line instead. (CRC)
 - Prefer `switch` to long `if`/`else` chains. (EG) `break` inside `switch` or `select` leaves only that statement; use a label to leave a loop. (spec, EG)
 - Watch for `:=` shadowing an outer variable, especially `err`, in an inner block.
 - `defer` runs when the function returns, and its arguments are evaluated when `defer` runs. (EG) Move a loop body that defers into its own function.
@@ -85,15 +89,16 @@ The `go` directive in the main module's `go.mod` sets the language version and t
 
 ## Errors
 
-- Return errors for ordinary failures. (CRC) Panic only for programmer errors, impossible states, or failed initialization such as `template.Must`. (EG, Uber) Call `os.Exit` or `log.Fatal` only in `main`, at most once; put the logic in a `run() error`. (Uber)
+- Return errors for ordinary failures. (CRC) Panic only for programmer errors, impossible states, or failed initialization such as `template.Must`. (EG, Uber) Call `os.Exit` or `log.Fatal` only in `main`, at most once; put the logic in a `run() error`. (Uber, Cheney)
 - Do not use Effective Go's package-internal panic and recover pattern; return errors from each level. (Departs from EG, the Go wiki, and Google.) Call `recover` only at a boundary that can restore a defined invariant or turn a panic into controlled process behavior.
 - Add context as you return: `fmt.Errorf("load customer %q: %w", id, err)`. Wrapping with `%w` makes the cause part of your API; use `%v` when callers should not depend on it, and return the error unchanged when there is nothing to add. ([Go 1.13 errors](https://go.dev/blog/go1.13-errors), Uber) The verbs format identically ([fmt](https://pkg.go.dev/fmt)); remove sensitive detail explicitly.
 - Error strings start lowercase unless they begin with a proper noun or acronym, have no trailing punctuation (CRC), and say what failed without "failed to" (Uber). Prefix with the package or operation when feasible: `image: unknown format`. (EG) These rules do not apply to log messages. (CRC)
-- Inspect wrapped errors with the `errors` package; never compare error strings. Export a sentinel (`ErrNotFound`) when callers need identity, an error type (`NotFoundError`) when they need fields. (Uber)
-- Do not signal failure in-band; return a final `bool` or `error`. `nil`, `""`, `0`, and `-1` are fine when they are valid results. (CRC)
-- Handle an error once: either log it or return it. (Uber)
+- Inspect wrapped errors with the `errors` package; never compare error strings. Export a sentinel (`ErrNotFound`) when callers need identity, an error type (`NotFoundError`) when they need fields; everything else about an error is opaque to callers. (Uber, Cheney)
+- Do not signal failure in-band; return a final `bool` or `error`. `nil`, `""`, `0`, and `-1` are fine when they are valid results. (CRC) A method never returns a nil pointer to mean "nothing happened"; it returns an error or a defined empty value. (Cheney)
+- Handle an error once: inspect it and make one decision. Logging it and also returning it produces duplicate logs and a context-free error at the top. (Uber, Cheney)
 - Discard an error with `_` only beside a comment that says why it cannot occur or cannot change the outcome. (Departs from CRC and EG.)
 - Check errors from cleanup that can lose data: `Close` on a written file, `Flush`, `Commit`. Combine a cleanup error with the primary one rather than replacing it.
+- When a run of calls would each need the same `if err != nil` and the caller needs only all-or-nothing, let a type keep the first error and report it once, as `bufio.Writer` does (`Write` calls, then `Flush`) and `bufio.Scanner` does (`Scan` loop, then `Err`). Reach for `bufio.Writer` before writing your own. One comment where the type is created, saying it keeps the error, covers the unchecked calls after it. The cost is that the caller cannot tell how far the run got. ([Errors are values](https://go.dev/blog/errors-are-values), Cheney) A type that implements `io.Writer` MUST return a non-nil error from every `Write` that writes less than `len(p)`, including the one that failed, so a hand-written error-keeping writer returns the stored error every time. ([io.Writer](https://pkg.go.dev/io#Writer); departs from Cheney's `errWriter`, which returns `n, nil` from the failing write.)
 
 ## Resources
 
@@ -120,15 +125,36 @@ The `go` directive in the main module's `go.mod` sets the language version and t
 
 - Store durations as `time.Duration`. When a wire format forces a number, put the unit in the field name. (Uber)
 - Build a wall-clock time on a date with `time.Date` in the right location; adding a duration to midnight is wrong across daylight-saving changes, so test such logic on a transition date.
-- Pass a clock to code whose behavior depends on the time rather than reading `time.Now` inside it.
+
+## Sequences
+
+Iterators need `go 1.23` or later in `go.mod`.
+
+- Return a slice when the result fits in memory and callers use all of it; a plain loop is often clearer than an iterator chain. ([Range over function types](https://go.dev/blog/range-functions))
+- Return an iterator when the sequence is large, produced lazily, or callers may stop early, and accept one when a function consumes any sequence. Use `iter.Seq` and `iter.Seq2`, never a custom function type. Name it for the sequence: `All` on a collection, a plural noun for one of several sequences, the order when there are several (`Backward`). Return as soon as `yield` returns false; calling it again panics. Say "single-use iterator" in the doc comment when the sequence cannot restart. Call the `stop` from `iter.Pull` with `defer`. ([iter](https://pkg.go.dev/iter))
+- Do not return a channel to deliver a sequence. The channel cannot report a failure partway through, so an empty result and a failed read look the same, and the caller must drain it or leak the goroutine filling it. (CRC "Synchronous Functions"; Cheney)
+- For a paginated or streamed remote result whose production can fail, return `iter.Seq2[T, error]` with the contract Google's client libraries use: a non-nil error is the last pair yielded, and the iterator stops after it. Say so in the doc comment. (House rule. The `iter` docs describe `Seq2` as key-value pairs and the Go team has declined to endorse any error shape; `cloud.google.com/go`, Stripe, and go-github all chose this one, and the alternatives, `Scan`/`Err` and callbacks, each have a known failure mode. A caller who ranges with one variable drops the error silently, so a review checks every `range` over a `Seq2[T, error]` for its `err`. Follow a repository that already uses another shape.)
+
+  ```go
+  // Rows yields every row across pages. A non-nil error is the last pair
+  // yielded; the iterator fetches nothing after it.
+  func Rows(ctx context.Context, fetch FetchPage) iter.Seq2[Row, error]
+
+  for row, err := range Rows(ctx, fetch) {
+  	if err != nil {
+  		return fmt.Errorf("list rows: %w", err)
+  	}
+  	total += row.Amount
+  }
+  ```
 
 ## Concurrency
 
-- Prefer synchronous functions; let the caller add concurrency. (CRC)
-- Every goroutine has an owner, a way to stop, and a way to report its error (Uber); make clear when or whether it exits (CRC). Bound how many goroutines a loop or server can start. (EG)
-- Use `errgroup` for goroutines that can fail together.
+- Prefer synchronous functions; let the caller add concurrency. (CRC, Cheney)
+- Every goroutine has an owner, a way to stop, and a way to report its error (Uber, Cheney); make clear when or whether it exits (CRC). Bound how many goroutines a loop or server can start. (EG)
+- Use `errgroup` for goroutines that can fail together, and `context` cancellation to stop them.
 - Share memory by communicating where it fits, but a mutex beside the fields it guards is often simpler. (EG) A zero-value mutex is valid; keep it a plain field. (Uber)
-- The sender closes a channel. Give a channel a buffer only when the protocol fixes its size. (Uber)
+- The sender closes a channel. Give a channel a buffer of zero or one unless the protocol fixes a larger size; other sizes are guesses. (Uber, Cheney)
 - In a module on `go 1.25` or later, do not set `GOMAXPROCS` or import `automaxprocs`: on Linux the runtime follows the container's CPU limit, and setting it by hand turns that off. Reading `runtime.GOMAXPROCS(0)` to size a pool is fine. ([Go 1.25](https://go.dev/doc/go1.25))
 
 ## HTTP
@@ -141,22 +167,24 @@ The `go` directive in the main module's `go.mod` sets the language version and t
 
 Go reads its documentation from the source, so doc comments are part of the API, but not everything needs a comment.
 
-- Every package and exported name has a doc comment, and so do non-trivial unexported types and functions. (CRC) Write full sentences ending in a period that begin with the name. (CRC, DC)
+- Every package and exported name has a doc comment, and so do non-trivial unexported types and functions. (CRC) Write full sentences ending in a period that begin with the name. (CRC, DC) A method that implements an interface still gets a real one-line comment, not `// Read implements io.Reader`. (Departs from Cheney, who would omit it; CRC and Google require it.)
 - A package comment begins "Package x", sits directly above the package clause with no blank line, and appears in one file; a command's begins with the program name or "Command name". (CRC, DC)
 - A type's comment says what an instance represents; document exported struct fields. (DC) A function returning a boolean "reports whether". (DC) Mark deprecation with a `Deprecated:` paragraph that names the replacement. (DC)
 - Document what a caller cannot see: special cases, zero-value behavior, and concurrency safety where it differs from the default (a type is assumed safe for one goroutine at a time, a top-level function for concurrent use), per method if the type comment does not cover it. Keep implementation details out. (DC) Also state units, ownership and mutation, blocking, cleanup duties, and the errors returned.
+- A comment on a constant or variable describes its contents or source (`// RFC 7231, 6.2.1`), not its purpose; if a package-level variable needs a comment saying who initializes it, that is a design smell to fix. (Cheney)
 - Comment unexported code when it holds a reason, a constraint, or an invariant. The principles' rule against history in comments applies.
 - A new package includes an example of intended use, or a test showing a complete call sequence. (CRC)
 
 ## Tests
 
-- Follow the repository's assertion style and do not convert a file between styles in an unrelated change. (Uber, "Be Consistent")
-- In a repository without an assertion library, use `testing` with `cmp.Diff` for structured values, and do not add `testify`. (TC) Where the repository already uses `testify`, keep it: `require` when the rest of the test cannot run, `assert` for independent checks, `cmp.Diff` for structs, no `testify/suite`, and `testifylint` when golangci-lint runs. (Departs from TC for existing suites; 15 of 20 large Go projects depend on testify.)
+- Follow the repository's assertion style and its test-package convention, and do not convert a file between styles in an unrelated change. (Uber, "Be Consistent")
+- Otherwise write tests in `package foo_test` and test through the exported API, which is what unit tests lock in. When a private function needs a direct test (principle 6), put that test in `foo_internal_test.go` with `package foo`, so the exception is its own file. `Example` functions go in `foo_test`, so they render as callers write them. (House rule; [testing](https://pkg.go.dev/testing) permits both forms. Departs from Cheney's preference for internal tests.)
+- In a new repository, use `testify`: `require` when the rest of the test cannot run, `assert` for independent checks, `cmp.Diff` for structured values, no `testify/suite`, and `testifylint` when golangci-lint runs. In a repository tested with the standard library alone, stay with `testing` and `cmp.Diff`. (House rule. Departs from TC and Google, which forbid assertion libraries; Uber's own examples use testify, and most large Go projects depend on it.)
 - Prefer `cmp.Equal` and `cmp.Diff` to `reflect.DeepEqual`. (TC)
 - Table-driven tests with `t.Run` for cases that share testing logic; separate test functions when the logic differs, and one table for success and one for errors when that is clearer. (TC) No branching on mock expectations or functions inside the table. (Uber) Name cases for the condition, never by index, and keep names readable after escaping. (TC)
 - Keep going after a failure: `t.Error` plus `continue` outside `t.Run`, `t.Fatal` inside a subtest or when setup fails. (TC)
 - Failure messages name the function and show input, got, then want: `Parse(%q) = %v, want %v`; label diffs `(-want +got)` and pass `cmp.Diff(want, got)` in that order. Compare whole structs at once, and do not compare exact `json.Marshal` output or anything else a dependency may change. (TC)
 - Use `t.Helper()` in helpers that fail the test (TC), and `t.Cleanup`, `t.TempDir`, `t.Setenv`, and `t.Context()`. `t.Context()` is canceled before cleanup functions run, so do not use it inside `t.Cleanup` ([Go 1.24](https://go.dev/doc/go1.24)); `t.Setenv` cannot be used with `t.Parallel`. ([testing](https://pkg.go.dev/testing))
-- Prefer real implementations and small hand-written fakes. Give fakes a failure mode and test the failures the code promises to handle. Do not define an interface on the implementing side only to mock it. (CRC) Use `testify/mock` or a generated mock only when the interaction itself is the behavior under test.
+- Give hand-written fakes a failure mode and test the failures the code promises to handle. Use `testify/mock` or a generated mock only when the interaction itself is the behavior under test.
 - Never synchronize with `time.Sleep`; wait on a channel or inject the clock. Use `httptest` for HTTP, and `t.Parallel` only for tests that share no state.
 - Fuzz parsers and decoders; benchmark only work tied to a real workload, with `b.Loop` (Go 1.24).

@@ -9,32 +9,11 @@ Project layout governs distribution, package, module, executable, public compati
 
 ## Rule strength
 
-- **MUST** marks a deterministic house rule. Depart only when a higher-precedence correctness, compatibility, repository, or packaging constraint requires it, and say so.
-- **SHOULD** marks a strong default. Depart only for a concrete reason.
-- **MAY** marks an acceptable option.
-- **MUST NOT** and **SHOULD NOT** carry the same force as MUST and SHOULD, applied to a prohibition.
+**MUST** and **MUST NOT** mark house rules: depart only when a correctness, compatibility, repository, or packaging constraint requires it, and say so. **SHOULD** and **SHOULD NOT** mark defaults: depart for a concrete reason you state. **MAY** marks an option. Sections headed `Required ...` and the `Flat layout house rule` are MUST; `Default decisions`, `Review standard`, and the consensus's `Practices to reject` are SHOULD unless a statement is marked MUST. Examples and rationale are not rules. A **house rule** is a convention this skill adopts, not a language requirement or a claim that alternatives are wrong.
 
-Enforcement follows section:
+## Changing this skill
 
-- sections whose heading begins with `Required`, plus `Flat layout house rule`: MUST.
-- `Default decisions`, `Review standard`, and `Practices to reject`: SHOULD unless a statement is explicitly marked otherwise.
-- A category MUST resolve to a heading or named list label in this skill; an unresolved category is a defect.
-- A statement marked MUST, SHOULD, or MAY carries that strength wherever it appears.
-- Examples, rationale, tables, and other explanatory prose are not independently enforceable.
-
-This scheme governs this file and every reference it loads.
-
-## Amendment standard
-
-A proposed change to this skill MUST fall into one of three classes:
-
-1. **Factual error.** A claim about the language, a packaging system, or a documented tool behavior that is false. Fix it and cite the primary source.
-2. **Internal contradiction.** Two rules that cannot both be satisfied, or a rule that contradicts its own cited authority. Fix it.
-3. **Demonstrated worse outcome.** A concrete scenario in which the current rule produces a worse result. Record the scenario with the change, and add it to an applicable benchmark when one exists.
-
-Strictness is deliberate: these rules instruct an agent, and a granted permission gets used constantly while a denied one surfaces in review. Correctness, public compatibility, repository requirements, and configured tooling already override every house rule. A proposal to weaken a rule still needs one of the three classes above; preference alone is not sufficient.
-
-A **house rule** is a deliberate convention adopted by this skill, not a language requirement and not a claim that alternatives are wrong.
+The owner may change any rule. A change you propose yourself must fix a factual error (cite the primary source), resolve an internal contradiction, or prevent a demonstrated worse outcome (record the scenario and add it to the benchmark). Do not propose weakening a rule for preference alone: these rules instruct an agent, and a granted permission gets used constantly while a denied one surfaces in review.
 
 ## Flat layout house rule
 
@@ -52,9 +31,7 @@ For a question already answered by the consensus "Project archetypes" section, t
 
 Use [the benchmark](references/benchmark.md) when evaluating or changing this skill. Run it after any edit to this directory.
 
-Read `../code-style/references/shared-principles.md` for the depth, extraction, and effect-boundary vocabulary this skill relies on. Package-level depth and hiding findings use the same definitions as the function-level rules there.
-
-Treat this directory together with the `code-style` skill directory as the portable unit. This skill depends on `../code-style/references/shared-principles.md` for the depth, extraction, and effect-boundary vocabulary. Distribute both directories together. Do not add further external references.
+Read `../code-style/references/principles.md` for the depth, extraction, and effect-boundary vocabulary; package-level depth and hiding findings use its definitions.
 
 ## First branch: greenfield or existing
 
