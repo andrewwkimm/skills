@@ -1,0 +1,10 @@
+{
+  "hidden_tests": false,
+  "manual_rubric": "rubric.md",
+  "copy_into_output": [
+    "change.diff",
+    "queue_consumer_before.py"
+  ],
+  "forbidden_codes": [],
+  "allowed_codes": []
+}

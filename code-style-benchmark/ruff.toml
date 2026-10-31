@@ -1,0 +1,12 @@
+# Neutral lint configuration for the benchmark and every agent output under it.
+# It replaces the enclosing repository's config so that both skill variants are
+# judged by the same, ordinary linter rather than one team's docstring rules.
+line-length = 120
+target-version = "py312"
+
+[lint]
+select = ["E", "F", "B", "I", "UP", "SIM", "RUF"]
+ignore = ["B017"]  # hidden tests deliberately accept any exception type in a few places
+
+[lint.per-file-ignores]
+"tasks/report_job_refactor/fixture/*" = ["B006", "RUF005"]  # planted smells the refactor task is meant to remove

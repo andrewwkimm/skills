@@ -1,0 +1,25 @@
+{
+  "hidden_tests": true,
+  "forbidden_codes": [
+    "PY_DEFAULT_AT_USE",
+    "PY_BARE_EXCEPT",
+    "PY_BROAD_EXCEPT",
+    "PY_SWALLOWED_EXCEPT",
+    "PY_IGNORE_ERRORS",
+    "PY_CHECK_THEN_ACT",
+    "PY_MUTABLE_DEFAULT",
+    "PY_SELF_FREE_METHOD",
+    "PY_HIDDEN_INPUT",
+    "PY_FSTRING_LOG",
+    "PY_IMPORT_TIME_EFFECT",
+    "PY_MAGICMOCK",
+    "PY_ASSERT_ON_CALL",
+    "PY_RAISES_EXCEPTION",
+    "PY_SLEEP_IN_TEST"
+  ],
+  "allowed_codes": [],
+  "baseline": "fixture",
+  "copy_into_output": [
+    "fixture/report_job.py"
+  ]
+}
