@@ -113,7 +113,7 @@ Place related decisions, the data they use, and the resources they hold close en
 
 Validity checked once at construction is validity every later line can rely on; validity checked by every consumer is validity one of them forgets.
 
-- One type per validity contract. Validate when constructing; never let a half-built value escape. A builder may mutate locally while assembling, and a supported zero value counts as valid. A constructor assembles; it does no I/O.
+- One type per validity contract. Validate when constructing; never let a half-built value escape. A builder may mutate locally while assembling, and a supported zero value counts as valid. A constructor assembles; it does no I/O. A function that acquires a resource (a file, a connection) is a separate operation named for it, such as `open` or `connect`, and returns something the caller closes.
 - Prefer a design in which the invalid case cannot arise over a check that detects it.
 - When an operation has distinct outcomes, return distinct types (a selection or a refusal) rather than one type with optional fields and a mode flag.
 - Use a domain type when it prevents an invalid combination or removes repeated validation; do not wrap a value only to label where it came from. A bare primitive says the value is unconstrained.

@@ -53,7 +53,7 @@ The `go` directive in the main module's `go.mod` sets the language version and t
 
 - Make the zero value useful when that is natural. (EG) When it cannot be, use unexported fields and a constructor that returns a valid value or an error.
 - `var x T` declares a deliberately zero value; `x := expr` declares a deliberately initialized one. Keep the two forms to those meanings so that an unusual initialization stands out. (Uber, Cheney)
-- A constructor that acquires a resource returns something with a `Close` and says so in its doc comment.
+- A function that acquires a resource is named for it (`Open`, `Dial`), returns something with a `Close`, and says so in its doc comment. A `New` constructor does not open files or connections (principle 8).
 - Accept interfaces, return concrete types. Define an interface in the package that uses it, with only the methods it calls, and only once a real consumer needs it; never on the implementing side "for mocking". (CRC) When a type exists only to implement an interface, its constructor returns the interface, as `crc32.NewIEEE` returns `hash.Hash32`. (EG)
 - Add `var _ I = (*T)(nil)` only for an interface the type must satisfy by contract and nothing in the code already converts. (EG, Uber)
 - Never return a nil concrete pointer through an interface; declare `error` and other interface results as the interface type. ([FAQ](https://go.dev/doc/faq#nil_error))
