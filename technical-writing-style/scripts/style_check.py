@@ -33,7 +33,7 @@ MAX_HEADINGS_PER_500 = 3.0
 MAX_PARAGRAPH_LINES = 6
 MAX_COLONS_PER_KWORDS = 12.0
 REPEAT_NGRAM = 4
-LIST_LABEL_WORDS = 5
+LIST_FRAGMENT_WORDS = 5
 REFERENCE_MIN_MEDIAN = 9
 REFERENCE_MAX_HEADINGS_PER_500 = 8.0
 
@@ -53,14 +53,17 @@ BANS = [
     ("closing exhortation", r"\b(?:go\s+(?:build|ship|try)\s+something|now\s+go\s+\w+|happy\s+(?:coding|hacking|building))\b", "delete"),
     ("fat word", r"\b(?:utiliz(?:e|es|ed|ing|ation)|leverag(?:e|es|ed|ing)|delv(?:e|es|ed|ing)\s+into|in\s+order\s+to|prior\s+to|subsequent\s+to|due\s+to\s+the\s+fact\s+that|in\s+the\s+event\s+that|at\s+this\s+point\s+in\s+time|has\s+the\s+ability\s+to|in\s+terms\s+of)\b", "use the lean form"),
     ("nominalized verb", r"\b(?:make|makes|made|making)\s+a\s+decision\b|\bprovid(?:e|es|ed|ing)\s+a\s+solution\b|\bperform(?:s|ed|ing)?\s+an?\s+analysis\b|\bconduct(?:s|ed|ing)?\s+an?\s+(?:review|investigation)\b|\bgive\s+consideration\s+to\b", "use the verb"),
+    ("exclamation point", r"(?<=[A-Za-z0-9)])!(?=\s|$)", "delete; state it plainly"),
     ("agentless passive", r"\b(?:it\s+(?:was|is)\s+(?:decided|determined|observed|noted|found)|(?:mistakes|errors|changes)\s+were\s+made)\b(?!\s+by\b)", "name the actor"),
 ]
 
-WEASELS = (r"\b(?:might|possibly|potentially|arguably|somewhat|fairly|generally"
+BANS_BY_NAME = {name: pattern for name, pattern, _ in BANS}
+
+WEASELS = (r"\b(?:might|possibly|potentially|arguably|somewhat|fairly|generally|very|quite|pretty\s+much|sort\s+of|kind\s+of"
            r"|typically|often|usually|perhaps|likely|tends?\s+to)\b"
            r"|\brather\s+(?!than\b)"
            r"|\b(?:seems?|appears?)\s+(?!as\b)"
-           r"|\b(?:may|could)\s+(?!break|be\s+accepted)")
+           r"|\b(?-i:may|could)\b")  # lowercase only, so the month May does not count
 LABELED_UNKNOWN = r"\b(?:not\s+(?:measured|verified|tested|known|confirmed)|unverified|no\s+data|unmeasured|we\s+don'?t\s+know|has\s+not\s+been\s+measured)\b"
 NOMINALIZATION = r"\b\w{4,}(?:tion|tions|ment|ments|ance|ence|ity|ities|ness|sion|sions)\b"
 
@@ -137,28 +140,39 @@ def clean_inline(line):
 
 
 def prose_only(kept):
-    """Returns lines that read as flowing prose, dropping headings and label lines."""
+    """Returns (prose, item_lines): lines that read as flowing prose, and the line numbers of list items.
+
+    Each list item becomes its own block, so items never merge into one sentence,
+    and a leading bold label such as "**Now.**" is dropped before the item is checked.
+    """
     out = []
+    item_lines = set()
     for num, line in kept:
         s = line.strip()
         if s.startswith("#"):
             continue
         if re.fullmatch(r"\*\*[^*]+\*\*:?", s):
             continue
+        is_item = bool(re.match(r"^\s*(?:[-*+]|\d+\.)\s", line))
         s = re.sub(r"^[-*+]\s+", "", s)
         s = re.sub(r"^\d+\.\s+", "", s)
-        if is_list_label(line, s):
-            continue
+        if is_item:
+            s = re.sub(r"^\*\*[^*]+\*\*:?\s*", "", s)
+            if not s or is_list_label(s):
+                continue
+            out.append((num, ""))
+            item_lines.add(num)
         out.append((num, s))
-    return out
+    return out, item_lines
 
 
-def is_list_label(raw, stripped):
-    """Tests whether a list item is a short label rather than a prose sentence."""
-    if not re.match(r"^\s*(?:[-*+]|\d+\.)\s", raw):
-        return False
-    first = re.split(r"(?<=[.!?])\s", stripped, maxsplit=1)[0]
-    return len(first.split()) < LIST_LABEL_WORDS
+def is_list_label(item):
+    """Tests whether a list item is a label, such as a source name, rather than a sentence.
+
+    An item with no terminal punctuation reads as a label. A punctuated item is a
+    sentence, so fragments like "No changes." stay in scope for the deletion test.
+    """
+    return not item.rstrip().endswith((".", "!", "?"))
 
 
 def sentences_with_lines(prose):
@@ -229,7 +243,8 @@ ANNOUNCEMENT = re.compile(
     r"^(?:The|This|That|A|An|Our)\s+\w+(?:\s+\w+)?\s+"
     r"(?:is|are|was|were|becomes|become|remains|remain)\s+"
     r"(?:not\s+)?(?:theoretical|normal|hard|clear|simple|important|critical|"
-    r"obvious|deliberate|approximate|intentional|straightforward|the\s+\w+)\b",
+    r"obvious|deliberate|approximate|intentional|straightforward|subtle|tricky|"
+    r"key|essential|crucial|nontrivial|by\s+design|the\s+\w+)\b",
     re.I,
 )
 
@@ -248,10 +263,18 @@ VERDICT_WORDS = re.compile(
 )
 
 FINALITY_VERB = re.compile(
-    r"\b(?:establish(?:es|ed)?|settl(?:es|ed)|specif(?:ies|ied)|chose|decided|deliberately)\b", re.I)
+    r"\b(?:establish(?:es|ed)?|settl(?:es|ed)|specif(?:ies|ied)|chose|decided|confirm(?:s|ed))\b", re.I)
 REF_MARKER = re.compile(r"#\d+")
 STATUS_WORD = re.compile(
     r"\b(?:merged|closed|shipped|released|landed|open|draft|proposed|pending|stalled)\b", re.I)
+# A verbless three-part list standing as its own sentence, such as "Faster builds, fewer flakes,
+# smaller images." The Fail ban above catches the One/No/Every form; this general form can match
+# a real sentence, so it is a Flag.
+TRIAD_FRAGMENT = re.compile(
+    r"^[A-Z][\w'-]*(?:\s+[\w'-]+)?,\s+[\w'-]+(?:\s+[\w'-]+)?,\s+(?:and\s+)?[\w'-]+(?:\s+[\w'-]+)?\.$")
+# Strunk and White rule 18: a succession of two-clause sentences joined the same way reads as singsong.
+LOOSE_JOIN = re.compile(r",\s+(?:so|which|and|but|while)\s", re.I)
+LOOSE_RUN = 3
 COMPLIANCE = re.compile(
     r"\b(?:matching|satisfying|fulfilling|meeting)\s+the\b[^.!?]{0,50}\b(?:outcome|requirement|criteria|ask)\b", re.I)
 
@@ -279,6 +302,9 @@ def subject_verb_gap(sentence):
              "runs", "ran", "makes", "made", "means", "meant", "gets", "got",
              "becomes", "became", "needs", "needed", "takes", "took", "sits", "sat",
              "beats", "wins", "loses", "reads", "writes", "fails", "passes"}
+    # A pronoun subject is followed by its verb, whatever that verb is ("I plan", "we want").
+    if len(words) > 1 and words[0].lower() in {"i", "we", "you", "they", "he", "she"}:
+        return 1
     for i, w in enumerate(words):
         if w.lower() in verbs or re.fullmatch(r"\w+(?:ed|es|s)", w.lower()):
             return i
@@ -328,7 +354,7 @@ def check(path, reference=False):
     """Returns (failures, findings, warnings, stats) for one markdown file."""
     text = Path(path).read_text(encoding="utf-8")
     kept, fragments, excluded = strip_noise(text)
-    prose = prose_only(kept)
+    prose, item_lines = prose_only(kept)
     heading_texts = [(n, l.strip().lstrip("#").strip()) for n, l in kept
                      if l.strip().startswith("#")]
     body = " ".join(s for _, s in prose)
@@ -346,9 +372,16 @@ def check(path, reference=False):
 
     findings = []
     prev_short = False
+    loose_run = 0
     for s, num in sents:
+        loose_run = loose_run + 1 if LOOSE_JOIN.search(s) else 0
+        if loose_run == LOOSE_RUN:
+            findings.append(("run of loose sentences", num, s[:66]))
         n = len(word_list(s))
-        if n < SHORT_SENTENCE_WORDS and is_bare_simple(s):
+        in_item = num in item_lines
+        if in_item and not reference and n < LIST_FRAGMENT_WORDS and is_bare_simple(s):
+            findings.append(("fragment in a list item", num, s[:66]))
+        if not in_item and n < SHORT_SENTENCE_WORDS and is_bare_simple(s):
             if not has_concrete_referent(s) and not (reference and is_imperative_rule(s)):
                 findings.append(("deletion test", num, s[:66]))
             if back_referring(s):
@@ -366,6 +399,8 @@ def check(path, reference=False):
             findings.append((f"verdict word: {m.group(0)}", num, s[:66]))
         if REF_MARKER.search(s) and FINALITY_VERB.search(s) and not STATUS_WORD.search(s):
             findings.append(("finality verb without reference status", num, s[:66]))
+        if TRIAD_FRAGMENT.match(s.strip()) and not re.search(BANS_BY_NAME["triadic fragment"], s, re.I):
+            findings.append(("three-part fragment", num, s[:66]))
         if COMPLIANCE.search(s):
             findings.append(("compliance narration", num, s[:66]))
         if clause_count(s) > MAX_CLAUSES:

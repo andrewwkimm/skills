@@ -1,17 +1,17 @@
 # New rule fixtures
 
-One Secret, one writer, no copies to drift. The provider keeps the admin keypair internal.
+One lockfile, one resolver, no drift. The build reads the lockfile before it fetches any package.
 
-The edge deployments the issue names are small. A later section mentions the edge deployments the issue names again.
+The staging hosts the ticket names are small. A later section mentions the staging hosts the ticket names again.
 
 The design: one part. The next: another. The third: more. The fourth: still more. The fifth: done. The sixth: extra.
 
-Testing and documentation are part of each step, not a final phase.
+Load testing is part of each milestone, not a final phase.
 
-This proposal makes object storage a backup target, not a backup source.
+This change makes the cache a read path, not a write path.
 
-The server exposes validation and health routes, not bucket-management operations.
+The service exposes health and metrics routes, not admin operations.
 
-The direction #665 establishes means the schema question is settled.
+The direction #412 establishes means the naming question is settled.
 
 The metric is exported end to end, matching the issue's required outcome.
