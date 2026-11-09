@@ -1,8 +1,10 @@
 # Exemplars
 
-Paired rewrites by register. The note after each pair says what changed and why, so the reasoning transfers rather than the surface pattern.
+Paired rewrites by register. The note after each pair says what changed and why. The reasoning is what should carry over to new documents; the nouns and the surface pattern should stay behind.
 
 Quoted BEFORE text is deliberately bad. The checker skips blockquote lines for that reason.
+
+Each BEFORE shows a pattern, and its wording is not a template. Match the failure to the rule it breaks, and ignore the nouns. An AFTER adds a fact only where the vagueness of the BEFORE stood in for a fact the writer had, and the note says so. Any other added detail is invented, which trades one defect for a worse one.
 
 ## 1. Reference doc entry
 
@@ -62,7 +64,7 @@ Three sentences that split one causal chain became one sentence that states the 
 
 Budgets and breakers overlap on purpose, because a budget bounds steady-state amplification while a breaker reacts faster to a hard failure.
 
-"Running both is normal" is a four-word verdict that carries no fact. Deleting it costs emphasis and nothing else. The rewrite folds the point into a sentence that names what each mechanism does. An earlier version of this rewrite appended "Most systems run both," which replaced the verdict with an unsourced survey claim, a worse defect than the one it fixed.
+"Running both is normal" is a four-word verdict that carries no fact. Deleting it costs emphasis and nothing else. The rewrite merges the point into a sentence that names what each mechanism does. An earlier version of this rewrite appended "Most systems run both," which replaced the verdict with an unsourced survey claim, a worse defect than the one it fixed.
 
 ## 6. Blog opener
 
@@ -74,17 +76,17 @@ Budgets and breakers overlap on purpose, because a budget bounds steady-state am
 
 A retry that fires during a partial outage adds load to a system that is already short of capacity, so the retry meant to hide one failure helps cause the next one.
 
-The opener that announces the topic came out, along with the background deferral. The claim is now sentence one. The reader gives you fifteen seconds and this spends none of them on setup.
+The opener that announces the topic came out, and so did the background deferral. The claim is now sentence one. Bernoff says the reader gives you tens of seconds, and this opener spends none of them on setup.
 
 ## 7. Same fact, three audiences
 
-Engineer: The loader casts an all-null column to `float64`, which Parquet writes as `DOUBLE`, so the downstream reader rejects the file on a type mismatch.
+Engineer: The page cache key omits the locale. After a deploy, the first request fills the cache in one language, and every later request gets that copy until the entry expires an hour later.
 
-PM: When a column arrives empty, the loader guesses the wrong type for it, and the next job refuses to read the file.
+PM: After each release, the site shows every visitor the language of whoever loaded the page first, for up to an hour.
 
-Executive: Five client reports stopped updating for two days. One code change altered how empty columns are typed, which broke the file format the reporting layer reads.
+Executive: For up to an hour after each release, some customers saw pages in the wrong language. One missing field in how pages are cached caused it.
 
-The facts do not change. The named machinery does. `float64` and `DOUBLE` are precise for the first reader and noise for the third. This is register calibration, and no word list detects it.
+The facts do not change. The named machinery does. `cache key` and `locale` are precise for the first reader and noise for the third. This is register calibration, and no word list detects it.
 
 ## 8. Organizational post
 
@@ -102,13 +104,13 @@ Five weasels became zero. Name the incentive rather than gesturing at friction. 
 
 **Before**
 
-> A refactor was made to the schema logic. Unfortunately, this ended up being load-bearing in ways nobody anticipated, and it broke things downstream.
+> A config change was made to the connection settings. Unfortunately, this ended up being load-bearing in ways nobody anticipated, and it broke things downstream.
 
 **After**
 
-A one-line change replaced an explicit column loop with `reindex`, which changed the type of all-null columns from `object` to `float64`. Five client reports failed to load for two days.
+I raised the pool's idle timeout from 30 to 120 seconds, above the load balancer's 60-second limit, so the balancer closed connections the pool still treated as open. Checkout requests failed for 40 minutes.
 
-The agentless passive, the dead metaphor, and "broke things" all came out. RCA register is one fact per sentence, each naming an actor and an action. No rhythmic emphasis and no asides.
+The agentless passive, the dead metaphor, and "broke things" all came out. The vague "broke things" stood in for figures the author had; the rewrite states them. RCA register is one fact per sentence, each naming an actor and an action, and the author owns their own change in first person.
 
 ## 10. Slack proposal
 
@@ -138,13 +140,13 @@ Each stacked form is shorter and slower. The test is whether the plain-clause ve
 
 **Before**
 
-> A regression test now asserts the column type on every commit, and it adds 40 milliseconds to the suite.
+> A regression test now checks on every commit that the pool timeout stays below the balancer's, and it adds 40 milliseconds to the suite.
 
 **After**
 
-A regression test now asserts the column type on every commit.
+A regression test now checks on every commit that the pool timeout stays below the balancer's.
 
-The test exists and the assertion is real. The 40 milliseconds was invented, because a number reads better than its absence. That is the failure mode this style creates: concreteness is the goal, so the pressure to supply concrete detail is constant. Confirming that a test exists licenses no claim about its runtime.
+The test exists and the check is real. The 40 milliseconds was invented, because a number reads better than its absence. That is the failure mode this style creates: because concreteness is the goal, the pressure to supply concrete detail never lets up. Confirming that a test exists licenses no claim about its runtime.
 
 ## 13. Verdict sentences in a design doc
 
@@ -154,9 +156,9 @@ Redis becomes a hard dependency of admission. When it is unreachable, the gatewa
 
 **AFTER**
 
-Admission now depends on Redis, so when Redis is unreachable the gateway falls back to the existing in-memory bucket and logs the degradation. That restores today's behavior rather than failing closed, which means a Redis outage costs us correct limits rather than all traffic.
+Admission now depends on Redis. When Redis is unreachable, the gateway falls back to the existing in-memory bucket and logs the degradation. That restores today's behavior rather than failing closed, which means a Redis outage costs us correct limits rather than all traffic.
 
-Sentence one announced what sentence two then demonstrated, so the announcement was a promise of a fact rather than a fact. Sentence three restated the tradeoff sentence two had already carried, converting the argument into a lesson. Folding the dependency into the working sentence and ending on what the outage actually costs leaves two sentences that each carry facts.
+Sentence one announced what sentence two then demonstrated; the announcement was a promise of a fact rather than a fact. Sentence three restated the tradeoff sentence two had already carried, converting the argument into a lesson. Folding the dependency into the working sentence and ending on what the outage actually costs leaves two sentences that each carry facts.
 
 **BEFORE**
 
@@ -172,13 +174,13 @@ The original scored its own decision. `the right trade` tells the reader the con
 
 **BEFORE**
 
-I think most interviewees probably can't pass the technical screen, at least from what I've seen, and the p99 latency under retry storms may potentially be a problem too.
+I think most of our flaky tests probably come from the network mocks, at least from what I've seen, and the p99 latency under retry storms may potentially be a problem too.
 
 **AFTER**
 
-Five of the seven recruiter-pipeline candidates last quarter failed the technical screen (fictional count, for illustration). We have not measured p99 latency under retry storms, and a load test against the staging gateway would settle it.
+Eleven of the fourteen tests quarantined last month used the network mocks (fictional count, for illustration). We have not measured p99 latency under retry storms, and a load test against the staging gateway would settle it.
 
-The first claim drops `I think`, `probably`, and `from what I've seen`, and shrinks the subject to the group and period the writer observed. Widening it to "candidates from the recruiter pipeline cannot pass" would trade the hedge for a claim about the whole group that seven interviews never established. The second is a gap in the evidence, which gets its own declarative sentence plus the action that would close it. Both read as owned. Neither hedges.
+The first claim drops `I think`, `probably`, and `from what I've seen`, and shrinks the subject to the tests and the period the writer observed. Widening it to "the network mocks cause our flaky tests" would trade the hedge for a causal claim that fourteen tests never established. The second is a gap in the evidence, which gets its own declarative sentence plus the action that would close it. Both read as owned. Neither hedges.
 
 **BEFORE**
 
@@ -188,64 +190,98 @@ Our exports are used by millions of records daily, and switching formats might p
 
 The nightly export writes 140 million rows. Changing the format breaks every consumer that reads positional columns, which is four of the six downstream jobs.
 
-`millions` was reachable by looking at the job metrics, so the hedge marked laziness rather than uncertainty. `might possibly break some` became a count once the writer checked which consumers parse by position. When a search would resolve the vagueness, searching is the fix.
+Because `millions` was reachable by looking at the job metrics, the hedge marked laziness rather than uncertainty. `might possibly break some` became a count once the writer checked which consumers parse by position. When a search would resolve the vagueness, searching is the fix.
 
-## 15. Triadic emphasis fragment (design proposal)
+## 15. Triadic emphasis fragment
 
 **BEFORE**
 
-> A BackupStorage can reference that Secret directly, because its controller adopts a credential Secret only when it has no controller owner. One Secret, one writer, no copies to drift.
+> Every build reads the same lockfile, so CI and local builds resolve the same package versions. One lockfile, one resolver, no drift.
 
 **AFTER**
 
-A BackupStorage can reference that Secret directly because its controller adopts a credential Secret only when it has no controller owner. Both sides then share one Secret with no copies to drift.
+Because every build reads the same lockfile, CI and local builds resolve the same package versions and cannot drift apart.
 
-The fragment repeated the preceding sentence as rhythm. Its one new fact, that sharing avoids copy drift, folded into a plain sentence with an actor.
+The fragment repeated the preceding sentence as rhythm. Its one new idea, that the versions cannot drift, moved into the causal sentence it decorated.
 
 ## 16. Figurative coinage in a technical register
 
 **BEFORE**
 
-> Anyone running on-premise or at the edge has to stand up the storage by hand, outside the platform, and then feed the coordinates back in.
+> Support staff have to pull the crash report out of the vendor console and then stitch it back into the ticket.
 
 **AFTER**
 
-Anyone running on-premise or at the edge has to stand it up by hand and enter its endpoint, bucket, and credentials into OpenEverest themselves.
+Support staff have to download the crash report from the vendor console and attach it to the ticket themselves.
 
-`Feed the coordinates back in` is a coined metaphor no reader can verify against the system. The rewrite names the actual fields, which is also more information.
+`Stitch it back into the ticket` is a coined metaphor that no reader can check against the system. The rewrite names the actual steps, which also tells the reader more.
 
-## 17. Invented qualifier next to a real term
+## 17. Vocabulary fidelity
 
 **BEFORE**
 
-> I screened the candidates against four requirements: compatible licensing, an operator-backed lifecycle, and declarative bucket and credential management.
+> I compared the queues against three requirements: permissive licensing, a cloud-native footprint, and declarative topic lifecycle.
 
 **AFTER**
 
-I screened the candidates against four requirements: a license the project can ship, an existing Kubernetes operator to run the cluster, and buckets and credentials the provider can manage as Kubernetes resources.
+I compared the queues against three requirements: a license we can ship, a managed offering from our cloud provider, and topics we can create and delete from configuration files.
 
-`Operator-backed lifecycle` and `declarative bucket management` stack real terms into compounds the source domain never uses. The rewrite says what each requirement means, so a reader who has never seen the jargon can still evaluate the screen.
-
-## 18. Deference hedge in a design proposal
+`Cloud-native footprint` and `declarative topic lifecycle` stack real terms into compounds the domain does not use. The rewrite says what each requirement means. A reader who has never seen the jargon can still judge the comparison.
 
 **BEFORE**
 
-> That is my lean, but I would not commit to it untested. Whether that destination is worth its cost is a mentor decision, not mine to preempt.
+> The pool keeps a runway of four idle connections, so a blackout on one host no longer stops queries.
 
 **AFTER**
 
-I recommend SeaweedFS as the first engine to validate and implement. If the MVP shows buckets and credentials need lifecycles independent of the Instance, I would propose dedicated core resources.
+The pool keeps at least four idle connections open, and losing one host no longer stops queries.
 
-A proposal is evaluated on owned decisions. `My lean` and `not mine to preempt` outsource the judgment the reader came for. The rewrite states the choice and makes the open question conditional on named evidence instead of on someone else's authority.
+`Runway` and `blackout` sound technical but belong to other fields, and a reader has to guess what they mean here. The rewrite uses plain words, and it would use the domain's own term, such as a minimum idle count, where one exists.
+
+## 18. Deference hedge in a proposal
+
+**BEFORE**
+
+> That is my lean, but I would not commit to it untested. Whether a second region is worth its cost is a call for the platform leads, not mine to preempt.
+
+**AFTER**
+
+We should start with one region and measure failover time in the first month. If failover takes longer than the recovery target, I plan to propose the second region with that measurement attached.
+
+A proposal is judged on owned decisions. `My lean` and `not mine to preempt` hand off the judgment the reader came for. The rewrite states the choice with "we should," states the follow-up with "I plan to," and makes the open question depend on named evidence instead of on someone else's authority.
 
 ## 19. Negated parallel in scope statements
 
 **BEFORE**
 
-> Testing and documentation are part of each step, not a final phase. This proposal makes object storage a backup target, not a backup source.
+> Load testing is part of each milestone, not a final phase. This change makes the cache a read path, not a write path.
 
 **AFTER**
 
-Testing and documentation are part of each step. Backing up the object store itself is out of scope.
+Load testing is part of each milestone. The cache serves reads only.
 
 Each `X, not Y` pair asserts X and then spends half the sentence denying a Y nobody claimed. Stating the positive half carries the same scope in fewer words.
+
+## 20. Fragment inside a plan step
+
+**BEFORE**
+
+> 3. **During the upgrade.** No changes. The old replica stays up, so traffic can move back by switching the DNS record.
+
+**AFTER**
+
+3. **During the upgrade.** Keep the old replica running, so traffic can move back by switching the DNS record.
+
+`No changes.` is a verbless fragment, and putting it in a numbered step does not exempt it. The rewrite folds the instruction into the sentence that already carried the action and the reason. The same holds for list items and table cells.
+
+## 21. Process notes in the deliverable
+
+**BEFORE**
+
+> I confirmed this on `main`. The loader deletes the staging file before the upload finishes, so a failed upload leaves the retry with nothing to read. If the vendor slips, we can fall back to manual exports.
+
+**AFTER**
+
+Because the loader deletes the staging file before the upload finishes, a failed upload leaves the retry with nothing to read.
+
+How the writer checked the code and a fallback plan outside the document's scope are notes for the requester. The reader gets the problem and its consequence.
