@@ -1,6 +1,6 @@
 # Decision log
 
-Settled questions, with the reasoning and the option that lost. Read this before proposing a change to the skill or when a user questions a rule. An entry is reopened only with new evidence of one of three kinds: a factual error (cite the primary source), a contradiction between rules, or an observed worse outcome you can describe. A user's doubt alone is answered with the recorded reasoning; the owner may override any entry, and the override is recorded here as owner preference.
+Settled questions, with the reasoning and the option that lost. Read this before proposing a change to the skill or when a user questions a rule. An entry is reopened only with new evidence of one of three kinds: a factual error (cite the primary source), a contradiction between rules, or a pattern of worse outcomes observed more than once, stated as the general rule rather than the instance. A user's doubt alone is answered with the recorded reasoning; the owner may override any entry, and the override is recorded here as owner preference.
 
 Source tiers, highest first: language docs and toolchain behavior; official or semi-official style guides (Effective Go, Code Review Comments, Test Comments, Google Go and Python guides, Uber, PEP 8); named practitioners; exemplar repositories; owner preference recorded as a house rule.
 
