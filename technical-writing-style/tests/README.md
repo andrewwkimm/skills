@@ -21,9 +21,10 @@ python3 scripts/style_check.py tests/loose_run.md
 python3 scripts/style_check.py tests/exclamation.md
 python3 scripts/style_check.py tests/month_may.md
 python3 scripts/style_check.py tests/pronoun_subject.md
+python3 scripts/style_check.py --all tests/bad_prose.md
 ```
 
-Expected exits are 1, 2, 0, 2, 1, 1, 1, 1, 0, 2, 0, 0, 2, 2, 2, 1, 0, and 0.
+Expected exits are 1, 2, 0, 2, 1, 1, 1, 1, 0, 2, 0, 0, 2, 2, 2, 1, 0, 0, and 1. The last run lists every Fail hit and every Flag, and its output contains no `more)` line.
 
 Exit semantics: 1 means a hard ban fired, 2 means Flags remain without a recorded human disposition, 0 means neither. `--accept-flags` records that a human confirmed or dismissed each Flag; the flags_only pair proves it converts exit 2 to 0. The reference-set command carries `--accept-flags` because the guide and exemplars quote flaggable shapes as teaching material, a standing human disposition.
 

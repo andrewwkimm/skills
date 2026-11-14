@@ -5,12 +5,14 @@ Reports Fail violations (exit 1), Flag candidates (exit 2 until a human passes
 --accept-flags), and advisory range warnings. Bans and weasels are scanned in
 headings and table cells as well as prose. A coverage line names the regions the
 checker excluded (code fences, blockquotes, quoted spans, BEFORE blocks) so a
-human can review them by eye. Output is capped regardless of input size. Uses
-only the standard library.
+human can review them by eye. Output is capped regardless of input size unless
+--all is passed. Uses only the standard library.
 
 Pass --reference for rulebooks and specifications, where short imperative rule
 statements and dense headings are features of the form rather than defects.
 Pass --accept-flags only after a human has confirmed or dismissed each Flag.
+Pass --all to list every hard-ban hit and every Flag, so a reviewer can
+dispose of each one; the default report shows a capped sample.
 """
 
 import re
@@ -368,7 +370,7 @@ def check(path, reference=False):
             for m in re.finditer(pattern, line, re.I):
                 hits.append((num, m.group(0)[:48]))
         if hits:
-            failures.append((name, fix, hits[:MAX_HITS_PER_RULE], len(hits)))
+            failures.append((name, fix, hits, len(hits)))
 
     findings = []
     prev_short = False
@@ -491,9 +493,11 @@ def main():
     args = sys.argv[1:]
     reference = "--reference" in args
     accept_flags = "--accept-flags" in args
+    show_all = "--all" in args
+    flag_cap = None if show_all else 8
     paths = [a for a in args if not a.startswith("--")]
     if not paths:
-        print("usage: style_check.py [--reference] [--accept-flags] FILE [FILE ...]")
+        print("usage: style_check.py [--reference] [--accept-flags] [--all] FILE [FILE ...]")
         return 2
     worst = 0
     flags_pending = False
@@ -507,6 +511,7 @@ def main():
         if failures:
             print(f"\nFail {len(failures)} hard-ban rule(s):")
             for name, fix, hits, n in failures:
+                hits = hits if show_all else hits[:MAX_HITS_PER_RULE]
                 shown = "; ".join(f"L{ln}: {txt}" for ln, txt in hits)
                 more = f" (+{n - len(hits)} more)" if n > len(hits) else ""
                 print(f"  [{name}] -> {fix}\n    {shown}{more}")
@@ -516,10 +521,10 @@ def main():
         if findings:
             flags_pending = True
             print(f"\nFlag {len(findings)} checker candidate(s), confirm each:")
-            for name, num, txt in findings[:8]:
+            for name, num, txt in findings[:flag_cap]:
                 print(f"  L{num} [{name}] {txt}")
-            if len(findings) > 8:
-                print(f"  (+{len(findings) - 8} more)")
+            if flag_cap is not None and len(findings) > flag_cap:
+                print(f"  (+{len(findings) - flag_cap} more; rerun with --all to list them)")
         else:
             print("Flag: no checker candidates")
         if warnings:

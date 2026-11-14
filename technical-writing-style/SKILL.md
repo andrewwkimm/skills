@@ -305,7 +305,7 @@ Run all thirteen before emitting a document. The first changes content, so it go
 12. Citation check. Fetch every cited link, confirm the target exists and supports the claim it is attached to, and record the target's title and the supported claim in the research notes. A link without a record does not ship.
 13. Publication re-read. After writing to an external destination, re-read the rendered artifact and walk every sentence, identifier, and link for truncation or damage. Repeat after every subsequent edit or format conversion. A clean checker run is not publication approval.
 
-Then run `scripts/style_check.py` on the file, which fails on bans and warns on ranges. Run it again after every subsequent edit to the document, since fixes routinely introduce new violations. Treat every Flag as blocking until a human confirms or dismisses it; the checker exits 2 while Flags remain, and only a human decision justifies `--accept-flags`.
+Then run `scripts/style_check.py` on the file, which fails on bans and warns on ranges. Run it again after every subsequent edit to the document, since fixes routinely introduce new violations. Treat every Flag as blocking until a human confirms or dismisses it; the checker exits 2 while Flags remain, and only a human decision justifies `--accept-flags`. The default report shows a capped sample of Flags; pass `--all` to list every one before a human disposes of them.
 
 Add `--reference` when the document is a rulebook, specification, or checklist. That form is scanned rather than read, so short imperative rule statements and dense headings are features of it. Prose written to be read straight through takes the default.
 
